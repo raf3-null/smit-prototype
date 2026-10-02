@@ -1,0 +1,677 @@
+{
+  "products": [
+    {
+      "id": "P001",
+      "name": "อกไก่แช่แข็ง",
+      "category": "ไก่",
+      "price": 89,
+      "min": 100,
+      "barcode": "885000000001",
+      "supplier": "S1"
+    },
+    {
+      "id": "P002",
+      "name": "สะโพกไก่",
+      "category": "ไก่",
+      "price": 75,
+      "min": 80,
+      "barcode": "885000000002",
+      "supplier": "S1"
+    },
+    {
+      "id": "P003",
+      "name": "สันคอหมู",
+      "category": "หมู",
+      "price": 165,
+      "min": 60,
+      "barcode": "885000000003",
+      "supplier": "S2"
+    },
+    {
+      "id": "P004",
+      "name": "ปลาหมึกกล้วย",
+      "category": "อาหารทะเล",
+      "price": 189,
+      "min": 50,
+      "barcode": "885000000004",
+      "supplier": "S3"
+    },
+    {
+      "id": "P005",
+      "name": "ปีกไก่กลาง",
+      "category": "ไก่",
+      "price": 105,
+      "min": 60,
+      "barcode": "885000000005",
+      "supplier": "S1"
+    },
+    {
+      "id": "P006",
+      "name": "กุ้งขาวแช่แข็ง",
+      "category": "อาหารทะเล",
+      "price": 225,
+      "min": 40,
+      "barcode": "885000000006",
+      "supplier": "S3"
+    }
+  ],
+  "lots": [
+    {
+      "id": "L001",
+      "pid": "P001",
+      "code": "CK-260901",
+      "qty": 320,
+      "received": "2026-09-01",
+      "expiry": "2026-12-01",
+      "room": "R1"
+    },
+    {
+      "id": "L002",
+      "pid": "P001",
+      "code": "CK-260920",
+      "qty": 280,
+      "received": "2026-09-20",
+      "expiry": "2027-01-20",
+      "room": "R1"
+    },
+    {
+      "id": "L003",
+      "pid": "P002",
+      "code": "TH-260915",
+      "qty": 240,
+      "received": "2026-09-15",
+      "expiry": "2026-12-15",
+      "room": "R1"
+    },
+    {
+      "id": "L004",
+      "pid": "P003",
+      "code": "PK-260801",
+      "qty": 185,
+      "received": "2026-08-01",
+      "expiry": "2026-10-08",
+      "room": "R2"
+    },
+    {
+      "id": "L005",
+      "pid": "P004",
+      "code": "SQ-260910",
+      "qty": 35,
+      "received": "2026-09-10",
+      "expiry": "2026-11-10",
+      "room": "R3"
+    },
+    {
+      "id": "L006",
+      "pid": "P005",
+      "code": "WG-260922",
+      "qty": 160,
+      "received": "2026-09-22",
+      "expiry": "2027-01-22",
+      "room": "R1"
+    },
+    {
+      "id": "L007",
+      "pid": "P006",
+      "code": "SH-260910",
+      "qty": 90,
+      "received": "2026-09-10",
+      "expiry": "2026-11-10",
+      "room": "R3"
+    },
+    {
+      "id": "L008",
+      "pid": "P003",
+      "code": "PK-260601",
+      "qty": 5,
+      "received": "2026-06-01",
+      "expiry": "2026-09-30",
+      "room": "R2"
+    }
+  ],
+  "customers": [
+    {
+      "id": "C1",
+      "name": "ร้านครัวริมโขง",
+      "phone": "0812340001",
+      "type": "ร้านอาหาร",
+      "area": "มุกดาหาร",
+      "channel": "LINE",
+      "joined": "2026-03-10",
+      "points": 340,
+      "referrer": "",
+      "special": 5
+    },
+    {
+      "id": "C2",
+      "name": "ร้านหมูกระทะบ้านเรา",
+      "phone": "0823450002",
+      "type": "ร้านอาหาร",
+      "area": "มุกดาหาร",
+      "channel": "โทรศัพท์",
+      "joined": "2026-01-15",
+      "points": 520,
+      "referrer": "",
+      "special": 5
+    },
+    {
+      "id": "C3",
+      "name": "คุณมาลี",
+      "phone": "0834560003",
+      "type": "ค้าปลีก",
+      "area": "มุกดาหาร",
+      "channel": "หน้าร้าน",
+      "joined": "2026-10-01",
+      "points": 25,
+      "referrer": "C1",
+      "special": 0
+    },
+    {
+      "id": "C4",
+      "name": "ร้านอร่อยดี",
+      "phone": "0845670004",
+      "type": "ร้านอาหาร",
+      "area": "นครพนม",
+      "channel": "LINE",
+      "joined": "2026-02-01",
+      "points": 120,
+      "referrer": "",
+      "special": 0
+    },
+    {
+      "id": "C5",
+      "name": "ร้านอาหารริมสวน",
+      "phone": "0856780005",
+      "type": "ร้านอาหาร",
+      "area": "สกลนคร",
+      "channel": "ออนไลน์",
+      "joined": "2026-05-01",
+      "points": 180,
+      "referrer": "",
+      "special": 3
+    },
+    {
+      "id": "C6",
+      "name": "ตลาดสดสมใจ",
+      "phone": "0867890006",
+      "type": "ค้าส่ง",
+      "area": "มุกดาหาร",
+      "channel": "โทรศัพท์",
+      "joined": "2026-01-20",
+      "points": 780,
+      "referrer": "",
+      "special": 5
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-1024",
+      "cid": "C1",
+      "channel": "LINE",
+      "date": "2026-10-02",
+      "items": [
+        {
+          "pid": "P001",
+          "qty": 30,
+          "price": 89
+        },
+        {
+          "pid": "P004",
+          "qty": 10,
+          "price": 189
+        }
+      ],
+      "discount": 5,
+      "status": "รอจัดสินค้า",
+      "accurate": true,
+      "online": false,
+      "address": "ร้านครัวริมโขง อ.เมือง มุกดาหาร",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L001",
+          "qty": 30
+        },
+        {
+          "lot": "L005",
+          "qty": 10
+        }
+      ]
+    },
+    {
+      "id": "ORD-1023",
+      "cid": "C2",
+      "channel": "โทรศัพท์",
+      "date": "2026-10-02",
+      "items": [
+        {
+          "pid": "P003",
+          "qty": 40,
+          "price": 165
+        }
+      ],
+      "discount": 5,
+      "status": "จัดสินค้าแล้ว",
+      "accurate": true,
+      "address": "อ.เมือง มุกดาหาร",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L004",
+          "qty": 40
+        }
+      ]
+    },
+    {
+      "id": "ORD-1022",
+      "cid": "C3",
+      "channel": "หน้าร้าน",
+      "date": "2026-10-01",
+      "items": [
+        {
+          "pid": "P002",
+          "qty": 5,
+          "price": 75
+        }
+      ],
+      "discount": 0,
+      "status": "เสร็จสิ้น",
+      "accurate": true,
+      "address": "",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L003",
+          "qty": 5
+        }
+      ]
+    },
+    {
+      "id": "ORD-1021",
+      "cid": "C5",
+      "channel": "ออนไลน์",
+      "date": "2026-10-01",
+      "items": [
+        {
+          "pid": "P006",
+          "qty": 20,
+          "price": 225
+        }
+      ],
+      "discount": 3,
+      "status": "กำลังจัดส่ง",
+      "accurate": true,
+      "address": "อ.เมือง สกลนคร",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L007",
+          "qty": 20
+        }
+      ]
+    },
+    {
+      "id": "ORD-1020",
+      "cid": "C6",
+      "channel": "โทรศัพท์",
+      "date": "2026-09-28",
+      "items": [
+        {
+          "pid": "P001",
+          "qty": 100,
+          "price": 89
+        }
+      ],
+      "discount": 5,
+      "status": "เสร็จสิ้น",
+      "accurate": true,
+      "address": "",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L001",
+          "qty": 100
+        }
+      ]
+    },
+    {
+      "id": "ORD-1019",
+      "cid": "C1",
+      "channel": "LINE",
+      "date": "2026-09-23",
+      "items": [
+        {
+          "pid": "P004",
+          "qty": 15,
+          "price": 189
+        }
+      ],
+      "discount": 5,
+      "status": "เสร็จสิ้น",
+      "accurate": true,
+      "address": "",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L005",
+          "qty": 15
+        }
+      ]
+    },
+    {
+      "id": "ORD-1018",
+      "cid": "C2",
+      "channel": "โทรศัพท์",
+      "date": "2026-09-20",
+      "items": [
+        {
+          "pid": "P003",
+          "qty": 30,
+          "price": 165
+        }
+      ],
+      "discount": 5,
+      "status": "เสร็จสิ้น",
+      "accurate": false,
+      "address": "",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L004",
+          "qty": 30
+        }
+      ]
+    },
+    {
+      "id": "ORD-1017",
+      "cid": "C6",
+      "channel": "หน้าร้าน",
+      "date": "2026-09-12",
+      "items": [
+        {
+          "pid": "P002",
+          "qty": 80,
+          "price": 75
+        }
+      ],
+      "discount": 5,
+      "status": "เสร็จสิ้น",
+      "accurate": true,
+      "address": "",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L003",
+          "qty": 80
+        }
+      ]
+    },
+    {
+      "id": "ORD-1016",
+      "cid": "C4",
+      "channel": "LINE",
+      "date": "2026-07-10",
+      "items": [
+        {
+          "pid": "P005",
+          "qty": 20,
+          "price": 105
+        }
+      ],
+      "discount": 0,
+      "status": "เสร็จสิ้น",
+      "accurate": true,
+      "address": "",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L006",
+          "qty": 20
+        }
+      ]
+    },
+    {
+      "id": "ORD-1015",
+      "cid": "C1",
+      "channel": "LINE",
+      "date": "2026-09-06",
+      "items": [
+        {
+          "pid": "P001",
+          "qty": 40,
+          "price": 89
+        }
+      ],
+      "discount": 5,
+      "status": "เสร็จสิ้น",
+      "accurate": true,
+      "address": "",
+      "picking": "FEFO",
+      "allocations": [
+        {
+          "lot": "L001",
+          "qty": 40
+        }
+      ]
+    }
+  ],
+  "rooms": [
+    {
+      "id": "R1",
+      "name": "ห้องเย็น 01",
+      "category": "ไก่และชิ้นส่วน",
+      "temp": -20.4,
+      "min": -25,
+      "max": -18,
+      "history": [-21, -20.7, -20.1, -20.5, -20.9, -20.4]
+    },
+    {
+      "id": "R2",
+      "name": "ห้องเย็น 02",
+      "category": "หมู",
+      "temp": -19.2,
+      "min": -25,
+      "max": -18,
+      "history": [-20, -19.8, -19.2, -19.5, -19, -19.2]
+    },
+    {
+      "id": "R3",
+      "name": "ห้องเย็น 03",
+      "category": "อาหารทะเล",
+      "temp": -15.6,
+      "min": -25,
+      "max": -18,
+      "history": [-21, -20.5, -19.6, -18.5, -17.1, -15.6]
+    }
+  ],
+  "incidents": [
+    {
+      "id": "I1",
+      "room": "R3",
+      "detected": "2026-10-02T09:41:00",
+      "notified": "2026-10-02T09:41:35",
+      "temp": -15.6,
+      "status": "เปิด",
+      "note": ""
+    }
+  ],
+  "waste": [
+    {
+      "id": "W1",
+      "date": "2026-09-25",
+      "pid": "P002",
+      "qty": 8,
+      "value": 600,
+      "reason": "บรรจุภัณฑ์เสียหาย",
+      "incident": ""
+    }
+  ],
+  "counts": [
+    {
+      "id": "CC1",
+      "date": "2026-09-28",
+      "lot": "L001",
+      "expected": 320,
+      "actual": 320
+    },
+    {
+      "id": "CC2",
+      "date": "2026-09-28",
+      "lot": "L003",
+      "expected": 240,
+      "actual": 240
+    },
+    {
+      "id": "CC3",
+      "date": "2026-09-28",
+      "lot": "L006",
+      "expected": 160,
+      "actual": 160
+    }
+  ],
+  "contacts": [
+    {
+      "id": "N1",
+      "cid": "C1",
+      "date": "2026-09-29",
+      "channel": "LINE",
+      "text": "แจ้งสินค้าปลาหมึกเข้าใหม่",
+      "kind": "ติดต่อ",
+      "resolved": true
+    },
+    {
+      "id": "N2",
+      "cid": "C2",
+      "date": "2026-09-20",
+      "channel": "โทรศัพท์",
+      "text": "สินค้าไม่ครบ 1 ถุง แจ้งฝ่ายขายจัดส่งเพิ่ม",
+      "kind": "ปัญหา",
+      "resolved": false
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "M1",
+      "name": "ต้อนรับลูกค้าใหม่",
+      "segment": "ลูกค้าใหม่",
+      "discount": 5,
+      "text": "ยินดีต้อนรับ รับส่วนลด 5% สำหรับออร์เดอร์แรก",
+      "status": "ร่าง",
+      "recipients": []
+    },
+    {
+      "id": "M2",
+      "name": "กลับมาอร่อยด้วยกัน",
+      "segment": "หายไปนาน",
+      "discount": 8,
+      "text": "คิดถึงกันไหม กลับมารับส่วนลด 8% ที่ศาศวัต ห้องเย็น",
+      "status": "ร่าง",
+      "recipients": []
+    }
+  ],
+  "messages": [],
+  "deliveries": [
+    {
+      "id": "D1",
+      "oid": "ORD-1021",
+      "carrier": "รถร้าน",
+      "driver": "คุณเอก",
+      "tracking": "SMIT-1021",
+      "status": "กำลังจัดส่ง",
+      "address": "อ.เมือง สกลนคร",
+      "eta": "2026-10-02",
+      "log": ["รับงานจัดส่ง", "ออกจากคลังสินค้า"]
+    }
+  ],
+  "suppliers": [
+    {
+      "id": "S1",
+      "name": "ฟาร์มไก่คุณภาพ",
+      "phone": "042000111",
+      "lead": 3
+    },
+    {
+      "id": "S2",
+      "name": "หมูดีฟู้ดส์",
+      "phone": "042000222",
+      "lead": 4
+    },
+    {
+      "id": "S3",
+      "name": "ทะเลสดแช่แข็ง",
+      "phone": "042000333",
+      "lead": 5
+    }
+  ],
+  "purchases": [],
+  "users": [
+    {
+      "id": "U1",
+      "name": "ศาศวัต เข็มพิลา",
+      "role": "ผู้จัดการ",
+      "active": true,
+      "last": "2026-10-02",
+      "training": ["คลังสินค้า", "CRM"]
+    },
+    {
+      "id": "U2",
+      "name": "คุณเอก",
+      "role": "คลังสินค้า",
+      "active": true,
+      "last": "2026-10-02",
+      "training": ["คลังสินค้า"]
+    },
+    {
+      "id": "U3",
+      "name": "คุณนิด",
+      "role": "ฝ่ายขาย",
+      "active": true,
+      "last": "2026-10-01",
+      "training": ["CRM"]
+    },
+    {
+      "id": "U4",
+      "name": "คุณฝน",
+      "role": "ฝ่ายขาย",
+      "active": false,
+      "last": "2026-08-01",
+      "training": []
+    }
+  ],
+  "logs": [],
+  "settings": {
+    "picking": "FEFO",
+    "inactiveDays": 60,
+    "loyaltyRate": 100,
+    "referralPoints": 50,
+    "connections": {
+      "LINE": true,
+      "IoT": true,
+      "Delivery": true
+    }
+  },
+  "kpi": {
+    "baselineWaste": 2000,
+    "baselineRetention": 50,
+    "baselineDigital": 5000,
+    "totalCaptured": 10,
+    "uptime": 43000,
+    "totalTime": 43200
+  },
+  "surveys": [
+    {
+      "id": "SV1",
+      "cid": "C1",
+      "score": 5,
+      "date": "2026-09-29",
+      "note": "สินค้าดีและส่งไว"
+    },
+    {
+      "id": "SV2",
+      "cid": "C2",
+      "score": 4,
+      "date": "2026-09-25",
+      "note": "อยากให้แจ้งสถานะเร็วขึ้น"
+    }
+  ]
+}

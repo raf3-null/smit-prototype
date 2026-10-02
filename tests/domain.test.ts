@@ -1,0 +1,214 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import {
+  createSeed,
+  stock,
+  allocate,
+  createOrder,
+  confirmOrder,
+  cancelOrder,
+  advanceOrder,
+  recordTemperature,
+  acknowledge,
+  closeIncident,
+  alerts,
+  group,
+  campaignRecipients,
+  sendCampaign,
+  validateState,
+  customer,
+  ordersFor,
+  sum,
+  TODAY,
+} from "../src/lib/domain";
+import { metrics } from "../src/lib/metrics";
+const request = {
+  cid: "C7",
+  channel: "LINE" as const,
+  discount: 5,
+  address: "",
+  note: "",
+  items: [{ pid: "P007", qty: 10 }],
+  employee: "พนักงานขาย",
+};
+test("connected realistic sample data", () => {
+  const s = createSeed();
+  assert.equal(s.products.length, 20);
+  assert.equal(s.customers.length, 20);
+  assert(s.orders.length >= 30);
+  assert.equal(s.rooms.length, 3);
+  assert.equal(s.incidents.length, 5);
+  assert.equal(s.campaigns.length, 5);
+  assert(validateState(s));
+  assert(
+    s.orders.every((o) =>
+      o.items.every((i) => s.products.some((p) => p.id === i.pid)),
+    ),
+  );
+});
+test("lot recommendation splits demand and excludes expired lots", () => {
+  const s = createSeed();
+  const a = allocate(s, [{ pid: "P007", qty: 40 }]);
+  assert.equal(a[0].lot, "L009");
+  assert.equal(a[0].qty, 30);
+  assert.equal(a[1].lot, "L030");
+  assert.equal(a[1].qty, 10);
+  assert.equal(stock(s, "P003"), 185);
+  assert.throws(() =>
+    allocate(s, [
+      { pid: "P007", qty: 60 },
+      { pid: "P007", qty: 50 },
+    ]),
+  );
+  assert.throws(() => allocate(s, [{ pid: "P007", qty: 0.001 }]));
+  assert.throws(() => allocate(s, []));
+});
+test("LINE order updates stock, lots, history, spending, points and performance counts", () => {
+  const s = createSeed(),
+    before = stock(s, "P007"),
+    history = ordersFor(s, "C7").length,
+    spending = ordersFor(s, "C7").reduce((a, o) => a + sum(o), 0),
+    points = customer(s, "C7").points,
+    captured = s.kpi.totalCaptured;
+  const o = createOrder(s, request);
+  assert.equal(stock(s, "P007"), before - 10);
+  assert.equal(ordersFor(s, "C7").length, history + 1);
+  assert.equal(
+    ordersFor(s, "C7").reduce((a, o) => a + sum(o), 0),
+    spending + sum(o),
+  );
+  assert.equal(customer(s, "C7").points, points + Math.floor(sum(o) / 100));
+  assert.equal(s.kpi.totalCaptured, captured + 1);
+  assert.equal(o.status, "กำลังจัดสินค้า");
+  assert(o.reserved);
+  assert.equal(o.allocations[0].pid, "P007");
+});
+test("invalid order is atomic across all products and fields", () => {
+  const s = createSeed(),
+    before = JSON.stringify(s);
+  assert.throws(() =>
+    createOrder(s, {
+      ...request,
+      items: [
+        { pid: "P007", qty: 1 },
+        { pid: "P003", qty: 9999 },
+      ],
+    }),
+  );
+  assert.equal(JSON.stringify(s), before);
+  assert.throws(() => createOrder(s, { ...request, discount: 101 }));
+  assert.equal(JSON.stringify(s), before);
+});
+test("pending order defers stock and history until confirmation", () => {
+  const s = createSeed(),
+    before = stock(s, "P007"),
+    points = customer(s, "C7").points,
+    history = ordersFor(s, "C7").length;
+  const o = createOrder(s, { ...request, pending: true });
+  assert.equal(o.status, "รอยืนยัน");
+  assert.equal(stock(s, "P007"), before);
+  assert.equal(customer(s, "C7").points, points);
+  assert.equal(ordersFor(s, "C7").length, history);
+  confirmOrder(s, o);
+  assert.equal(stock(s, "P007"), before - 10);
+  assert.equal(ordersFor(s, "C7").length, history + 1);
+  assert.throws(() => confirmOrder(s, o));
+});
+test("cancellation restores original lot and points once, removes from sales history", () => {
+  const s = createSeed(),
+    before = stock(s, "P007"),
+    points = customer(s, "C7").points,
+    h = ordersFor(s, "C7").length;
+  const o = createOrder(s, request);
+  assert.throws(() => cancelOrder(s, o, ""));
+  cancelOrder(s, o, "ลูกค้าเปลี่ยนรายการ");
+  assert.equal(stock(s, "P007"), before);
+  assert.equal(customer(s, "C7").points, points);
+  assert.equal(ordersFor(s, "C7").length, h);
+  cancelOrder(s, o, "อีกครั้ง");
+  assert.equal(stock(s, "P007"), before);
+});
+test("status transitions prevent skipping and completed order reversal", () => {
+  const s = createSeed(),
+    o = createOrder(s, request);
+  assert.throws(() => advanceOrder(o, "เสร็จสิ้น"));
+  assert.throws(() => advanceOrder(o, "พร้อมส่ง"));
+  o.accurate = true;
+  advanceOrder(o, "พร้อมส่ง");
+  advanceOrder(o, "เสร็จสิ้น");
+  assert.throws(() => advanceOrder(o, "รอยืนยัน"));
+  assert.throws(() => cancelOrder(s, o, "ย้อนหลัง"));
+});
+test("temperature incident shares alert and metrics, ack and resolution keep audit timestamps", () => {
+  const s = createSeed(),
+    r = s.rooms[0],
+    before = s.incidents.length;
+  recordTemperature(s, r, -10, 35);
+  const i = s.incidents[0];
+  assert.equal(s.incidents.length, before + 1);
+  assert(alerts(s).some((a) => a.id === i.id));
+  assert.equal(metrics(s, "all").find((m) => m.key === "latency")!.value, 35);
+  recordTemperature(s, r, -9);
+  assert.equal(s.incidents.length, before + 1);
+  acknowledge(i, "คุณเอก");
+  assert(i.acknowledged);
+  assert.equal(i.assigned, "คุณเอก");
+  assert(Date.parse(i.detected) <= Date.parse(i.notified));
+  assert(Date.parse(i.notified) <= Date.parse(i.acknowledged!));
+  assert.throws(() => closeIncident(s, i, "ตรวจแล้ว"));
+  recordTemperature(s, r, -20);
+  closeIncident(s, i, "ปิดประตูให้สนิท");
+  assert.equal(i.status, "ปิด");
+  assert(!alerts(s).some((a) => a.id === i.id));
+});
+test("customer grouping and win-back recipients derive from purchase history", () => {
+  const s = createSeed();
+  assert.equal(group(s, customer(s, "C4")), "ไม่ได้ซื้อนาน");
+  assert.equal(group(s, customer(s, "C9")), "ลูกค้าประจำ");
+  const c = s.campaigns.find((c) => c.id === "M2")!;
+  assert(campaignRecipients(s, c).some((c) => c.id === "C4"));
+  sendCampaign(s, c);
+  assert.equal(c.status, "ส่งแล้ว");
+  assert.equal(s.messages.length, c.recipients.length);
+  assert(s.messages.every((m) => m.campaign === c.id && m.channel === "LINE"));
+  assert.throws(() => sendCampaign(s, c));
+});
+test("performance avoids fake monthly uptime and actual prior comparison", () => {
+  const s = createSeed();
+  assert.equal(
+    metrics(s, "2026-10").find((m) => m.key === "uptime")!.value,
+    null,
+  );
+  assert.equal(
+    metrics(s, "2026-10").find((m) => m.key === "capture")!.value,
+    null,
+  );
+  assert.equal(
+    metrics(s, "2026-09").find((m) => m.key === "latency")!.value,
+    35,
+  );
+  assert.equal(metrics(s, "all").length, 9);
+  assert(metrics(s, "2026-10").find((m) => m.key === "order")!.trend !== null);
+});
+test("backup import rejects negative inventory and broken references", () => {
+  const s = createSeed();
+  s.lots[0].qty = -1;
+  assert(!validateState(s));
+  const bad = createSeed();
+  bad.orders[0].cid = "missing";
+  assert(!validateState(bad));
+  assert(!validateState({}));
+});
+
+test("import validation protects room, promotion and settings rendering", () => {
+  const s = createSeed();
+  (s.rooms[0] as any).history = undefined;
+  assert(!validateState(s));
+  const c = createSeed();
+  (c.campaigns[0] as any).recipients = null;
+  assert(!validateState(c));
+  const k = createSeed();
+  k.settings.regularOrders = 0;
+  assert(!validateState(k));
+  assert(!validateState({ products: [null] }));
+});
