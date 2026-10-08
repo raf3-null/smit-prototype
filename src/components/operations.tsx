@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import {
-  Snowflake,
   LayoutList,
   ClipboardList,
   Package,
@@ -286,13 +285,8 @@ export default function Operations() {
       )}
       <aside className={"sidebar " + (menu ? "open" : "")}>
         <div className="brand">
-          <span className="brand-mark">
-            <Snowflake size={25} />
-          </span>
-          <div>
-            <strong>ศาศวัต ห้องเย็น</strong>
-            <small>ระบบจัดการภายใน</small>
-          </div>
+          <img className="brand-logo" src="/sasawat-logo.png" alt="บริษัท ศาศวัต ห้องเย็น จำกัด" width={192} height={128} />
+          <small>ระบบจัดการภายใน</small>
         </div>
         <div className="branch">
           <span>มุกดาหาร</span>
@@ -372,6 +366,7 @@ export default function Operations() {
             >
               <Menu size={20} />
             </Button>
+            <img className="header-logo" src="/sasawat-logo.png" alt="ศาศวัต ห้องเย็น" width={66} height={44} />
             <span>สาขามุกดาหาร</span>
             <b>/</b>
             <strong>{titles[active] || "ภาพรวม"}</strong>

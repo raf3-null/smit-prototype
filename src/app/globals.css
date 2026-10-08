@@ -28,7 +28,7 @@ body {
   background: var(--background);
   color: var(--text-primary);
   font:
-    14px/1.6 "Noto Sans Thai",
+    14px/1.6 "Sarabun",
     Tahoma,
     sans-serif;
 }
@@ -214,29 +214,11 @@ summary {
   z-index: 40;
   padding: 24px 12px 12px;
 }
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 8px 20px;
-}
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  background: #eaf2f8;
-  border-radius: 8px;
-  color: var(--primary);
-}
-.brand strong {
-  font-size: 16px;
-  white-space: nowrap;
-}
-.brand small {
-  display: block;
-  margin-top: 4px;
-}
+.brand { display: flex; flex-direction: column; gap: 4px; padding: 0 8px 16px; }
+.brand-logo { display: block; width: 192px; height: 128px; object-fit: contain; }
+.brand small { display: block; text-align: center; font-size: 12px; }
+.header-logo { display: none; width: 66px; height: 44px; object-fit: contain; flex-shrink: 0; }
+@media (max-width: 760px) { .header-logo { display: block; } }
 .branch {
   display: flex;
   justify-content: space-between;
