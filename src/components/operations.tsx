@@ -63,6 +63,7 @@ import {
   Settings,
 } from "./management";
 import { Forms } from "./forms";
+import LineWorkspace from "./line-workspace";
 import Training from "./training";
 import OnlineIntake from "./online-intake";
 const navigation = [
@@ -85,6 +86,7 @@ const navigation = [
       { route: "crm", title: "รายชื่อลูกค้า", icon: Contact },
       { route: "groups", title: "กลุ่มลูกค้า", icon: Users },
       { route: "marketing", title: "โปรโมชั่น", icon: Tags },
+      { route: "line", title: "ข้อความ LINE", icon: Contact },
       { route: "service", title: "ติดตามและบริการ", icon: Contact },
     ],
   },
@@ -107,7 +109,7 @@ const navigation = [
   },
 ];
 const roleRoutes: Record<string, string[]> = {
-  พนักงานขาย: ["dashboard", "orders", "inventory", "delivery", "crm", "groups", "marketing", "service", "alerts", "team", "new-order"],
+  พนักงานขาย: ["dashboard", "orders", "inventory", "delivery", "crm", "groups", "marketing", "line", "service", "alerts", "team", "new-order"],
   พนักงานคลัง: ["dashboard", "orders", "inventory", "delivery", "alerts", "team"],
   ผู้ดูแลห้องเย็น: ["dashboard", "coldroom", "inventory", "alerts", "team"],
 };
@@ -267,6 +269,9 @@ export default function Operations() {
         break;
       case "kpi":
         content = <Performance go={go} open={open} />;
+        break;
+      case "line":
+        content = <LineWorkspace go={go} entity={entity} filter={filter} />;
         break;
       case "team":
         content = <Training open={open} />;

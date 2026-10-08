@@ -189,6 +189,7 @@ export function CustomerDetail({
     category = favoriteCategory(s, id);
   return (
     <>
+      <Button onClick={()=>go("line",id)}>ติดต่อทาง LINE</Button>
       <PageHeader
         title={c.name}
         description={`${c.phone} · ${c.type} · ${c.area}`}

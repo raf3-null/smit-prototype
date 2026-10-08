@@ -179,6 +179,7 @@ export type State = {
     eta: string;
     status: string;
   }[];
+  lineMessages?: {id:string;key:string;cid:string;text:string;source:string;route:string;time:string;sender:string;direction?:"customer"|"store";receipt?:string}[];
   trainingData?: TrainingData;
   users: {
     id: string;

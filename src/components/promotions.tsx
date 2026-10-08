@@ -476,6 +476,7 @@ export function PromotionDetail({ id, go }: { id: string; go: Navigate }) {
       : campaignRecipients(s, p);
   return (
     <>
+      <Button onClick={()=>go("line","",id)}>เตรียมข้อความ LINE</Button>
       <PageHeader
         title={p.name}
         description={`${p.channel} · ${date(p.start)} – ${date(p.end)} · ส่วนลด ${p.discount}%`}

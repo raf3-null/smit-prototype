@@ -1,4 +1,5 @@
 "use client";
+import LinePreview from "./line-preview";
 import { useState } from "react";
 import { Check, Printer, ArrowUpRight, ScanLine } from "lucide-react";
 import { useStore } from "./store";
@@ -76,6 +77,7 @@ export function Forms({
   let title = "",
     body: React.ReactNode = null;
   let drawer = false;
+  if (kind === "line-preview") { title = "ตัวอย่างข้อความ LINE"; body = <LinePreview />; }
   if (kind === "customer") {
     const c = s.customers.find((x) => x.id === id);
     title = c ? "แก้ไขข้อมูลลูกค้า" : "เพิ่มลูกค้า";
@@ -1128,7 +1130,7 @@ export function Forms({
       eligible.find((o) => o.id === choice) ||
       eligible.find((o) => o.id === id) ||
       eligible[0];
-    title = "จัดงานส่ง";
+    title = "ระบุผู้ส่งและออกจัดส่ง";
     if (!o)
       body = (
         <Empty
@@ -1140,23 +1142,22 @@ export function Forms({
       body = (
         <SimpleForm
           onCancel={close}
-          label="บันทึกงานส่ง"
+          label="ยืนยันออกจัดส่ง"
           onSubmit={(f) => {
             if (s.deliveries.some((d) => d.oid === f.oid))
               throw Error("คำสั่งซื้อนี้มีงานส่งแล้ว");
-            commit("บันทึกงานส่งแล้ว", (s) =>
+            commit("ออกจัดส่งแล้ว ไปยืนยันส่งมอบสินค้าในขั้นตอนถัดไป", (s) => {
+              const order = s.orders.find(x => x.id === f.oid);
+              if (!order || order.status !== "พร้อมส่ง") throw Error("คำสั่งซื้อต้องอยู่ในสถานะพร้อมส่ง");
+              if (s.deliveries.some(d => d.oid === f.oid)) throw Error("คำสั่งซื้อนี้มีงานส่งแล้ว");
+              advanceOrder(order, "กำลังจัดส่ง");
               s.deliveries.unshift({
-                id: uid("D"),
-                oid: f.oid,
-                carrier: f.carrier,
-                driver: f.driver,
-                tracking: f.tracking,
-                address: f.address,
-                eta: f.eta,
-                status: "รอรับสินค้า",
-                log: ["สร้างงานส่ง " + new Date().toLocaleTimeString("th-TH")],
-              }),
-            );
+                id: uid("D"), oid: f.oid, carrier: f.carrier,
+                driver: f.driver, tracking: f.tracking,
+                address: f.address, eta: f.eta, status: "กำลังจัดส่ง",
+                log: ["ออกจัดส่ง " + new Date().toLocaleTimeString("th-TH")],
+              });
+            });
           }}
         >
           <Field label="คำสั่งซื้อ">
@@ -1291,7 +1292,7 @@ export function Forms({
       <div className="receipt-totals"><p>รวมก่อนส่วนลด <b>฿{money(subtotal)}</b></p><p>ส่วนลด {o.discount}% <b>฿{money(subtotal-o.receipt.amount)}</b></p><p className="receipt-net">รับชำระสุทธิ <b>฿{money(o.receipt.amount)}</b></p></div>
       <p>ชำระโดย {o.receipt.method}{o.receipt.reference && " · อ้างอิง " + o.receipt.reference}</p><p>ผู้รับเงิน {o.receipt.cashier}</p>
       <p className="muted">ขอบคุณที่ใช้บริการ · เอกสารตัวอย่างจากระบบต้นแบบ ไม่ใช่ใบกำกับภาษี</p>
-      <div className="form-footer"><Button primary onClick={()=>window.print()}><Printer size={16}/>พิมพ์ / บันทึก PDF</Button></div>
+      <div className="form-footer"><Button onClick={()=>{close();go("line","",o.id)}}>ส่งใบเสร็จทาง LINE</Button><Button primary onClick={()=>window.print()}><Printer size={16}/>พิมพ์ / บันทึก PDF</Button></div>
     </div> : <SimpleForm onCancel={close} onSubmit={f=>{change("ออกใบเสร็จรับเงินแล้ว", state=>issueReceipt(state.orders.find(x=>x.id===id)!,f.method,f.reference || "",role));}}>
       <p><b>{o.id} · {c.name}</b></p><StatStrip items={[{label:"ยอดที่รับชำระ",value:"฿"+money(sum(o))}]} />
       <Field label="วิธีชำระเงิน" required><select name="method" value={choice === "โอนเงิน" ? "โอนเงิน" : "เงินสด"} onChange={e=>setChoice(e.target.value)}><option>เงินสด</option><option>โอนเงิน</option></select></Field>
@@ -1584,7 +1585,7 @@ export function Forms({
       {body}
     </Drawer>
   ) : (
-    <Modal key={kind + "-" + id} title={title} onClose={close}>
+    <Modal wide={kind === "line-preview"} key={kind + "-" + id} title={title} onClose={close}>
       {body}
     </Modal>
   );

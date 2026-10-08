@@ -1242,7 +1242,7 @@ export function Settings({ open, go }: { open: OpenForm; go: Navigate }) {
                 </Button>
                 <Button
                   small
-                  onClick={() =>
+                  onClick={() => k === "LINE" ? open("line-preview") :
                     notify(
                       s.settings.connections[k]
                         ? "ทดสอบสำเร็จในโหมดจำลอง"
@@ -1255,6 +1255,7 @@ export function Settings({ open, go }: { open: OpenForm; go: Navigate }) {
               </div>
             ))}
             <div className="actions">
+              <Button onClick={() => open("line-preview")}>ตัวอย่างแชต LINE</Button>
               <Button onClick={() => open("temperature")}>
                 ส่งค่าอุณหภูมิจำลอง
               </Button>

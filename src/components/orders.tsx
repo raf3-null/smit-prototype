@@ -27,6 +27,7 @@ import {
 } from "./ui";
 import {
   State,
+  uid,
   Order,
   Customer,
   Channel,
@@ -57,6 +58,18 @@ export type Navigate = (
   entity?: string,
 ) => void;
 export type OpenForm = (kind: string, id?: string) => void;
+function SendOrderLine({o,go}:{o:Order;go:Navigate}) {
+  const {s,change,role}=useStore();
+  if(role==='พนักงานคลัง'||['รอยืนยัน','ยกเลิก'].includes(o.status))return null;
+  const key=`${o.id}-${o.status}-${o.receipt?.number||'order'}`;
+  const sent=s.lineMessages?.some(m=>m.key===key);
+  return <Button small onClick={e=>{e.stopPropagation();if(sent){go('line','',o.id);return;}if(change('ส่งคำสั่งซื้อเข้า LINE จำลองแล้ว',state=>{
+    const current=state.orders.find(x=>x.id===o.id)!;
+    const list=state.lineMessages||(state.lineMessages=[]);
+    if(list.some(m=>m.key===key))return;
+    list.push({id:uid('LINE'),key,cid:current.cid,source:current.id,route:'orders',direction:'store',sender:role,time:new Date().toISOString(),receipt:current.receipt?.number,text:`แจ้งคำสั่งซื้อ ${current.id}\n${current.items.map(i=>`${product(state,i.pid).name} ${i.qty} ${product(state,i.pid).unit}`).join('\n')}\nยอดสุทธิ ฿${money(sum(current))}\nสถานะ: ${current.status}\n${current.address?'จัดส่ง: '+current.address:'รับสินค้าที่ร้าน'}${current.receipt?'\nรับชำระแล้ว · ใบเสร็จ '+current.receipt.number:''}`});
+  }))go('line','',o.id);}}>{sent?'ดูแชต LINE':'ส่งเข้า LINE จำลอง'}</Button>;
+}
 export function OrderList({
   go,
   filter: initial = "",
@@ -184,7 +197,7 @@ export function OrderList({
           {
             label: "",
             cell: (o) => (
-              <Button
+              <div className="actions"><SendOrderLine o={o} go={go}/><Button
                 small
                 onClick={(e) => {
                   e.stopPropagation();
@@ -192,7 +205,7 @@ export function OrderList({
                 }}
               >
                 ดูรายการ →
-              </Button>
+              </Button></div>
             ),
           },
         ]}
@@ -813,7 +826,10 @@ export function OrderDetail({
           "เสร็จสิ้น",
         ),
       );
-    else open("delivery", id);
+    else {
+      const delivery = s.deliveries.find(d => d.oid === id);
+      open(delivery ? "delivery-detail" : "delivery", delivery?.id || id);
+    }
   };
   return (
     <>
@@ -823,6 +839,7 @@ export function OrderDetail({
         back={() => go("orders")}
         actions={
           <>
+            {!warehouse && !["รอยืนยัน","ยกเลิก"].includes(o.status) && <SendOrderLine o={o} go={go}/>}
             {!warehouse && !["รอยืนยัน", "ยกเลิก"].includes(o.status) && <Button onClick={() => open("receipt", id)}><Printer size={16} />{o.receipt ? "ดูใบเสร็จ" : "ออกใบเสร็จ"}</Button>}
             {!["รอยืนยัน", "ยกเลิก"].includes(o.status) && (
               <Button onClick={() => open("picking", id)}>
@@ -841,13 +858,13 @@ export function OrderDetail({
                   : o.status === "กำลังจัดสินค้า"
                     ? "จัดสินค้าเสร็จแล้ว"
                     : o.address
-                      ? "จัดงานส่ง"
+                      ? (s.deliveries.some(d => d.oid === id) ? "ดำเนินการจัดส่งต่อ" : "ออกจัดส่ง")
                       : "ลูกค้ารับสินค้าแล้ว"}
               </Button>
             )}
             {o.status === "กำลังจัดส่ง" && (
-              <Button primary onClick={() => go("delivery")}>
-                ติดตามการจัดส่ง
+              <Button primary onClick={() => {const d=s.deliveries.find(d=>d.oid===id);if(d)open("delivery-detail",d.id);else go("delivery");}}>
+                ยืนยันส่งมอบ / ติดตามการจัดส่ง
               </Button>
             )}
           </>
@@ -890,7 +907,7 @@ export function OrderDetail({
       )}
       <div className="notice">
         <strong>ขั้นตอนถัดไป: </strong>
-        {o.status === "รอยืนยัน" ? "ฝ่ายขายตรวจลูกค้า จำนวน และการรับสินค้า ก่อนยืนยันคำสั่งซื้อ" : o.status === "กำลังจัดสินค้า" ? "คลังหยิบสินค้าตามห้องและล็อตด้านล่าง ทำเครื่องหมายทีละล็อต แล้วตรวจความครบถ้วน" : o.status === "พร้อมส่ง" ? (o.address ? "จัดงานส่งและระบุผู้ส่ง ก่อนส่งมอบสินค้า" : "ตรวจชื่อผู้รับและจำนวนสินค้าก่อนยืนยันรับหน้าร้าน") : o.status === "กำลังจัดส่ง" ? "ติดตามสถานะและบันทึกผลส่งมอบในหน้าการจัดส่ง" : "ตรวจประวัติการทำรายการด้านล่างได้"}
+        {o.status === "รอยืนยัน" ? "ฝ่ายขายตรวจลูกค้า จำนวน และการรับสินค้า ก่อนยืนยันคำสั่งซื้อ" : o.status === "กำลังจัดสินค้า" ? "คลังหยิบสินค้าตามห้องและล็อตด้านล่าง ทำเครื่องหมายทีละล็อต แล้วตรวจความครบถ้วน" : o.status === "พร้อมส่ง" ? (o.address ? "ระบุผู้ส่งและยืนยันออกจัดส่ง จากนั้นบันทึกผลส่งมอบสินค้า" : "ตรวจชื่อผู้รับและจำนวนสินค้าก่อนยืนยันรับหน้าร้าน") : o.status === "กำลังจัดส่ง" ? "กดยืนยันส่งมอบเมื่อสินค้าถึงลูกค้าแล้ว เพื่อปิดคำสั่งซื้อ" : "ตรวจประวัติการทำรายการด้านล่างได้"}
       </div>
       <Section title="รายการสินค้า">
         <DataTable
