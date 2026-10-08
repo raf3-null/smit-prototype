@@ -2370,3 +2370,5 @@ td small {
 .mobile-bottom { background: #fff; border-top-color: #cde7f7; }
 .mobile-bottom button.active { color: #087bbd; background: #edf8ff; }
 ::selection { background: #c6ebff; color: #12324d; }
+
+@media(max-width:600px) { .reset-button-label { display:none; } }

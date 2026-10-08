@@ -1275,7 +1275,7 @@ export function Settings({ open, go }: { open: OpenForm; go: Navigate }) {
               </Button>
               <Button onClick={() => open("import")}>นำเข้าข้อมูลสำรอง</Button>
               <Button danger onClick={() => setReset(true)}>
-                เริ่มข้อมูลตัวอย่างใหม่
+                รีเซ็ตข้อมูลตัวอย่าง
               </Button>
             </div>
             <p className="muted">
@@ -1286,7 +1286,7 @@ export function Settings({ open, go }: { open: OpenForm; go: Navigate }) {
         </div>
       </div>
       {reset && (
-        <Modal title="เริ่มข้อมูลตัวอย่างใหม่?" onClose={() => setReset(false)}>
+        <Modal title="รีเซ็ตข้อมูลตัวอย่าง?" onClose={() => setReset(false)}>
           <p>
             ข้อมูลที่ทดลองในเวอร์ชันนี้จะถูกแทนที่
             ดาวน์โหลดข้อมูลสำรองก่อนหากต้องการเก็บไว้
@@ -1297,11 +1297,11 @@ export function Settings({ open, go }: { open: OpenForm; go: Navigate }) {
               danger
               onClick={() => {
                 replace(createSeed());
-                notify("เริ่มข้อมูลตัวอย่างใหม่แล้ว");
+                notify("รีเซ็ตข้อมูลตัวอย่างแล้ว");
                 setReset(false);
               }}
             >
-              ยืนยันเริ่มใหม่
+              ยืนยันรีเซ็ตข้อมูล
             </Button>
           </div>
         </Modal>

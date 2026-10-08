@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import {
+  RotateCcw,
   LayoutList,
   ClipboardList,
   Package,
@@ -25,6 +26,7 @@ import {
 } from "lucide-react";
 import { useStore } from "./store";
 import {
+  createSeed,
   Role,
   alerts,
   stock,
@@ -50,6 +52,7 @@ import { ColdRoom } from "./coldroom";
 import { Customers, CustomerDetail, Groups } from "./customers";
 import { Promotions, NewPromotion, PromotionDetail } from "./promotions";
 import {
+  download,
   Home,
   Performance,
   Analytics,
@@ -127,7 +130,7 @@ function parseRoute() {
   };
 }
 export default function Operations() {
-  const { s, role, setRole, change, toast, toastKind, ready } = useStore();
+  const { s, role, setRole, change, toast, toastKind, ready, replace, notify } = useStore();
   const [location, setLocation] = useState({
     page: "dashboard",
     filter: "",
@@ -135,6 +138,8 @@ export default function Operations() {
   });
   const [customerAdded, setCustomerAdded] = useState("");
   const [form, setForm] = useState<{ kind: string; id?: string } | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetConfirmed, setResetConfirmed] = useState(false);
   const [menu, setMenu] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState("");
@@ -382,6 +387,7 @@ export default function Operations() {
             <strong>{titles[active] || "ภาพรวม"}</strong>
           </div>
           <div className="header-tools">
+            {role === "ผู้จัดการ" && <Button aria-label="รีเซ็ตข้อมูลตัวอย่าง" onClick={() => {setResetConfirmed(false);setResetOpen(true);}}><RotateCcw size={16}/><span className="reset-button-label">รีเซ็ตข้อมูล</span></Button>}
             <Button
               className="global-search-button"
               onClick={() => {
@@ -436,6 +442,13 @@ export default function Operations() {
           </button>
         ))}
       </nav>
+      {resetOpen && <Modal title="รีเซ็ตข้อมูลกลับเป็นค่าเริ่มต้น?" onClose={() => setResetOpen(false)}>
+        <p>ข้อมูลที่ทดลองเพิ่มหรือแก้ในเบราว์เซอร์นี้จะถูกแทนที่ด้วยข้อมูลตัวอย่างเริ่มต้น รวมคำสั่งซื้อ สต๊อก ลูกค้า ใบเสร็จ โปรโมชั่น และผลการอบรม</p>
+        <p className="muted">มีผลเฉพาะเบราว์เซอร์นี้ เครื่องอื่นจะไม่เปลี่ยนตาม</p>
+        <Button onClick={() => download("ศาศวัต-ข้อมูลก่อนรีเซ็ต.json", s)}>ดาวน์โหลดข้อมูลสำรองก่อนรีเซ็ต</Button>
+        <label className="check-row"><input type="checkbox" checked={resetConfirmed} onChange={e=>setResetConfirmed(e.target.checked)}/>เข้าใจว่าข้อมูลที่ทดลองจะถูกแทนที่</label>
+        <div className="form-footer"><Button onClick={()=>setResetOpen(false)}>ยกเลิก</Button><Button danger disabled={!resetConfirmed} onClick={()=>{replace(createSeed());setResetOpen(false);setForm(null);go("dashboard");notify("รีเซ็ตข้อมูลกลับเป็นค่าเริ่มต้นแล้ว");}}>ยืนยันรีเซ็ตข้อมูล</Button></div>
+      </Modal>}
       {toast && (
         <div
           className={"toast " + (toastKind === "error" ? "toast-error" : "")}
