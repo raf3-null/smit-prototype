@@ -102,6 +102,14 @@ const navigation = [
     ],
   },
 ];
+const roleRoutes: Record<string, string[]> = {
+  พนักงานขาย: ["dashboard", "orders", "inventory", "delivery", "crm", "groups", "marketing", "service", "alerts", "new-order"],
+  พนักงานคลัง: ["dashboard", "orders", "inventory", "delivery", "alerts"],
+  ผู้ดูแลห้องเย็น: ["dashboard", "coldroom", "inventory", "alerts"],
+};
+function canAccess(role: string, route: string) {
+  return role === "ผู้จัดการ" || (roleRoutes[role] || []).includes(route);
+}
 const titles = Object.fromEntries(
   navigation.flatMap((g) => g.items).map((x) => [x.route, x.title]),
 );
@@ -177,12 +185,12 @@ export default function Operations() {
   const p = location.page,
     filter = location.filter,
     entity = location.entity;
-  const managerPage = ["kpi", "analytics", "suppliers"].includes(p);
-  if (managerPage && role !== "ผู้จัดการ")
+  const managerPage = !canAccess(role, p);
+  if (managerPage)
     content = (
       <Empty
-        title="หน้านี้เป็นมุมมองผู้จัดการ"
-        description="เลือกบทบาทผู้จัดการที่เมนูผู้ใช้เพื่อดูข้อมูลนี้"
+        title="หน้านี้ไม่อยู่ในงานของบทบาทที่เลือก"
+        description="กลับไปงานวันนี้เพื่อดูเมนูสำหรับบทบาทของคุณ"
         action={
           <Button onClick={() => go("dashboard")}>กลับไปงานวันนี้</Button>
         }
@@ -294,7 +302,8 @@ export default function Operations() {
         </div>
         <nav aria-label="เมนูหลัก">
           {navigation
-            .filter((g) => !g.manager || role === "ผู้จัดการ")
+            .map((g) => ({ ...g, items: g.items.filter((x) => canAccess(role, x.route)) }))
+            .filter((g) => g.items.length > 0)
             .map((g, n) => (
               <div className="nav-section" key={n}>
                 {g.section && (
@@ -415,7 +424,7 @@ export default function Operations() {
           },
           { r: "inventory", label: "สินค้า", icon: Package },
           { r: "crm", label: "ลูกค้า", icon: Users },
-        ].map((x) => (
+        ].filter((x) => canAccess(role, x.r)).map((x) => (
           <button
             key={x.r}
             className={active === x.r ? "active" : ""}
