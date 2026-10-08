@@ -8,6 +8,7 @@ import {
   confirmOrder,
   cancelOrder,
   advanceOrder,
+  issueReceipt,
   recordTemperature,
   acknowledge,
   closeIncident,
@@ -211,4 +212,32 @@ test("import validation protects room, promotion and settings rendering", () => 
   k.settings.regularOrders = 0;
   assert(!validateState(k));
   assert(!validateState({ products: [null] }));
+});
+
+test("picking checklist must cover every allocated lot before handoff", () => {
+ const s = createSeed(); const o = createOrder(s, {...request, items: [{pid: "P007", qty: 40}]});
+ o.accurate = true; o.pickedLots = [o.allocations[0].lot];
+ assert.throws(() => advanceOrder(o, "พร้อมส่ง"));
+ assert.equal(o.status, "กำลังจัดสินค้า");
+ o.pickedLots = o.allocations.map(a => a.lot);
+ advanceOrder(o, "พร้อมส่ง"); assert.equal(o.status, "พร้อมส่ง");
+});
+
+test("receipt records exact net amount, prevents duplicate issue and cancellation", () => {
+ const s = createSeed(); const o = createOrder(s, request);
+ assert.throws(()=>issueReceipt(o,"โอนเงิน","","ขาย"));
+ issueReceipt(o,"โอนเงิน","TEST-001","ขาย");
+ assert.equal(o.receipt!.amount,sum(o)); assert.equal(o.receipt!.reference,"TEST-001");
+ assert.throws(()=>issueReceipt(o,"เงินสด","","ขาย"));
+ assert.throws(()=>cancelOrder(s,o,"ยกเลิก"));
+ const pending = createOrder(s,{...request, pending:true}); assert.throws(()=>issueReceipt(pending,"เงินสด","","ขาย"));
+});
+
+import {trainingData,saveResult} from '../src/lib/training';
+test('training seeds relevant assignments and requires reason for result correction',()=>{
+ const s=createSeed();const d=trainingData(s);assert.equal(d.courses.length,4);s.trainingData=d;const e=d.enrollments[0];
+ assert.throws(()=>saveResult(s,e.id,{attendance:'เข้าอบรม',score:101,note:'',reason:''},'ผู้จัดการ'));
+ saveResult(s,e.id,{attendance:'เข้าอบรม',score:85,note:'ผ่าน',reason:''},'ผู้จัดการ');assert.equal(e.status,'ผ่าน');assert.ok(e.review);
+ assert.throws(()=>saveResult(s,e.id,{attendance:'เข้าอบรม',score:60,note:'',reason:''},'ผู้จัดการ'));
+ saveResult(s,e.id,{attendance:'เข้าอบรม',score:60,note:'ทบทวน',reason:'แก้คะแนนตามแบบประเมิน'},'ผู้จัดการ');assert.equal(e.status,'ต้องทบทวน');assert.equal(e.history.length,2);assert.equal(e.review,'');
 });

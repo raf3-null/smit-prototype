@@ -60,6 +60,7 @@ import {
   Settings,
 } from "./management";
 import { Forms } from "./forms";
+import Training from "./training";
 import OnlineIntake from "./online-intake";
 const navigation = [
   {
@@ -103,9 +104,9 @@ const navigation = [
   },
 ];
 const roleRoutes: Record<string, string[]> = {
-  พนักงานขาย: ["dashboard", "orders", "inventory", "delivery", "crm", "groups", "marketing", "service", "alerts", "new-order"],
-  พนักงานคลัง: ["dashboard", "orders", "inventory", "delivery", "alerts"],
-  ผู้ดูแลห้องเย็น: ["dashboard", "coldroom", "inventory", "alerts"],
+  พนักงานขาย: ["dashboard", "orders", "inventory", "delivery", "crm", "groups", "marketing", "service", "alerts", "team", "new-order"],
+  พนักงานคลัง: ["dashboard", "orders", "inventory", "delivery", "alerts", "team"],
+  ผู้ดูแลห้องเย็น: ["dashboard", "coldroom", "inventory", "alerts", "team"],
 };
 function canAccess(role: string, route: string) {
   return role === "ผู้จัดการ" || (roleRoutes[role] || []).includes(route);
@@ -263,7 +264,7 @@ export default function Operations() {
         content = <Performance go={go} open={open} />;
         break;
       case "team":
-        content = <Team open={open} />;
+        content = <Training open={open} />;
         break;
       case "settings":
         content = <Settings open={open} go={go} />;
@@ -317,7 +318,7 @@ export default function Operations() {
                     aria-current={active === x.route ? "page" : undefined}
                   >
                     <x.icon size={17} />
-                    <span>{x.title}</span>
+                    <span>{x.route === "team" && role !== "ผู้จัดการ" ? "การอบรมของฉัน" : x.title}</span>
                     {x.route === "alerts" && unread > 0 && (
                       <small>{unread}</small>
                     )}

@@ -1,3 +1,4 @@
+import type { TrainingData } from "./training";
 import base from "./base-data.json";
 export const TODAY = "2026-10-02";
 export const STORAGE_KEY = "sasawat-operations-v2";
@@ -59,6 +60,8 @@ export type Order = {
   discount: number;
   status: OrderStatus;
   accurate: boolean;
+  pickedLots?: string[];
+  receipt?: { number: string; issued: string; method: string; reference: string; cashier: string; amount: number };
   address: string;
   note: string;
   allocations: Allocation[];
@@ -176,6 +179,7 @@ export type State = {
     eta: string;
     status: string;
   }[];
+  trainingData?: TrainingData;
   users: {
     id: string;
     name: string;
@@ -430,11 +434,22 @@ export function advanceOrder(o: Order, next: OrderStatus) {
     throw Error("เปลี่ยนสถานะข้ามขั้นตอนนี้ไม่ได้");
   if (next === "พร้อมส่ง" && !o.accurate)
     throw Error("ตรวจสินค้าให้ถูกต้องและครบก่อน");
+  if (next === "พร้อมส่ง" && o.pickedLots && o.allocations.some(a => !o.pickedLots!.includes(a.lot)))
+    throw Error("ตรวจหยิบให้ครบทุกล็อตก่อนส่งต่อ");
   o.status = next;
   o.timeline.push({ status: next, time: new Date().toISOString() });
 }
+export function issueReceipt(o: Order, method: string, reference: string, cashier: string) {
+  if (["รอยืนยัน", "ยกเลิก"].includes(o.status)) throw Error("ยืนยันคำสั่งซื้อก่อนออกใบเสร็จ");
+  if (o.receipt) throw Error("คำสั่งซื้อนี้ออกใบเสร็จแล้ว");
+  if (!["เงินสด", "โอนเงิน"].includes(method)) throw Error("เลือกวิธีชำระเงิน");
+  if (method === "โอนเงิน" && !reference.trim()) throw Error("ระบุเลขอ้างอิงการโอน");
+  o.receipt = { number: "RC-" + o.id, issued: new Date().toISOString(), method, reference: reference.trim(), cashier, amount: sum(o) };
+  o.timeline.push({status: "ออกใบเสร็จ " + o.receipt.number + " · " + method + " · " + cashier, time: o.receipt.issued});
+}
 export function cancelOrder(s: State, o: Order, reason: string) {
   if (!reason.trim()) throw Error("ระบุเหตุผลที่ยกเลิก");
+  if (o.receipt) throw Error("รายการนี้ออกใบเสร็จแล้ว ต้องจัดการคืนเงินก่อนยกเลิก");
   if (o.status === "ยกเลิก") return;
   if (["กำลังจัดส่ง", "เสร็จสิ้น"].includes(o.status))
     throw Error("คำสั่งซื้อที่ส่งแล้วไม่สามารถยกเลิกได้");

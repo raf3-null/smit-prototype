@@ -36,6 +36,7 @@ import {
   closeIncident,
   advanceOrder,
   validateState,
+  issueReceipt,
 } from "@/lib/domain";
 import { Navigate, OpenForm } from "./orders";
 const opts = (xs: { id: string; name: string }[]) =>
@@ -419,7 +420,7 @@ export function Forms({
             <b>{p.barcode}</b>
           </div>
         </div>
-        <div className="actions">
+        {(role === "ผู้จัดการ" || role === "พนักงานคลัง") && <div className="actions">
           <Button
             primary
             disabled={l.expiry < TODAY || l.qty <= 0}
@@ -432,8 +433,8 @@ export function Forms({
           <Button danger onClick={() => open("waste", l.id)}>
             บันทึกสินค้าเสีย
           </Button>
-          <Button onClick={() => open("product", p.id)}>แก้ไขสินค้า</Button>
-        </div>
+          {role === "ผู้จัดการ" && <Button onClick={() => open("product", p.id)}>แก้ไขสินค้า</Button>}
+        </div>}
         <Section title="ล็อตอื่นของสินค้านี้">
           <DataTable
             rows={s.lots.filter((x) => x.pid === p.id && x.id !== id)}
@@ -1276,6 +1277,28 @@ export function Forms({
         )}
       </>
     );
+  }
+  if (kind === "receipt") {
+    const o = s.orders.find(x => x.id === id)!;
+    const c = customer(s, o.cid);
+    title = o.receipt ? "ใบเสร็จรับเงิน" : "ออกใบเสร็จรับเงิน";
+    const subtotal = o.items.reduce((total, i) => total + i.qty * i.price, 0);
+    body = o.receipt ? <div className="print-document receipt-document">
+      <div className="receipt-brand"><img src="/sasawat-logo.png" alt="ศาศวัต ห้องเย็น" /><div><h2>บริษัท ศาศวัต ห้องเย็น จำกัด</h2><p>สาขามุกดาหาร</p></div></div>
+      <h2>ใบเสร็จรับเงิน</h2>
+      <div className="receipt-meta"><div><b>เลขที่ {o.receipt.number}</b><p>คำสั่งซื้อ {o.id}</p><p>วันที่ออก {new Date(o.receipt.issued).toLocaleString("th-TH-u-ca-gregory")}</p></div><div><b>ลูกค้า {c.name}</b><p>โทรศัพท์ {c.phone}</p><p>{o.address || "รับสินค้าหน้าร้าน"}</p></div></div>
+      <DataTable rows={o.items.map((i,n)=>({...i,id:String(n)}))} columns={[{label:"รายการ",cell:i=>product(s,i.pid).name},{label:"จำนวน",align:"right",cell:i=>i.qty+" "+product(s,i.pid).unit},{label:"ราคาต่อหน่วย",align:"right",cell:i=>money(i.price)},{label:"จำนวนเงิน",align:"right",cell:i=>money(i.qty*i.price)}]} />
+      <div className="receipt-totals"><p>รวมก่อนส่วนลด <b>฿{money(subtotal)}</b></p><p>ส่วนลด {o.discount}% <b>฿{money(subtotal-o.receipt.amount)}</b></p><p className="receipt-net">รับชำระสุทธิ <b>฿{money(o.receipt.amount)}</b></p></div>
+      <p>ชำระโดย {o.receipt.method}{o.receipt.reference && " · อ้างอิง " + o.receipt.reference}</p><p>ผู้รับเงิน {o.receipt.cashier}</p>
+      <p className="muted">ขอบคุณที่ใช้บริการ · เอกสารตัวอย่างจากระบบต้นแบบ ไม่ใช่ใบกำกับภาษี</p>
+      <div className="form-footer"><Button primary onClick={()=>window.print()}><Printer size={16}/>พิมพ์ / บันทึก PDF</Button></div>
+    </div> : <SimpleForm onCancel={close} onSubmit={f=>{change("ออกใบเสร็จรับเงินแล้ว", state=>issueReceipt(state.orders.find(x=>x.id===id)!,f.method,f.reference || "",role));}}>
+      <p><b>{o.id} · {c.name}</b></p><StatStrip items={[{label:"ยอดที่รับชำระ",value:"฿"+money(sum(o))}]} />
+      <Field label="วิธีชำระเงิน" required><select name="method" value={choice === "โอนเงิน" ? "โอนเงิน" : "เงินสด"} onChange={e=>setChoice(e.target.value)}><option>เงินสด</option><option>โอนเงิน</option></select></Field>
+      <Field label="เลขอ้างอิงการโอน" required={choice === "โอนเงิน"}><input name="reference" required={choice === "โอนเงิน"} placeholder="เลขอ้างอิงจากหลักฐานการโอน" /></Field>
+      <label className="check-row"><input type="checkbox" required />ตรวจสอบว่าได้รับชำระครบแล้ว (จำลอง)</label>
+      <p className="muted">หลังบันทึกจะได้เลขใบเสร็จเดิมสำหรับพิมพ์ซ้ำ และไม่สามารถยกเลิกคำสั่งซื้อนี้โดยตรงได้</p>
+    </SimpleForm>;
   }
   if (kind === "picking") {
     const o = s.orders.find((x) => x.id === id)!;

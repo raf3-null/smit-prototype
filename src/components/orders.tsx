@@ -66,7 +66,7 @@ export function OrderList({
   filter?: string;
   open: OpenForm;
 }) {
-  const { s } = useStore();
+  const { s, role } = useStore();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState(initial || "ทั้งหมด");
   const [channel, setChannel] = useState("ทั้งหมด");
@@ -95,7 +95,7 @@ export function OrderList({
       <PageHeader
         title="คำสั่งซื้อ"
         description={`${s.orders.length} รายการ · รับจากโทรศัพท์ LINE และหน้าร้าน`}
-        actions={
+        actions={role !== "พนักงานคลัง" &&
           <Button primary onClick={() => go("new-order")}>
             <Plus size={16} />
             สร้างคำสั่งซื้อ
@@ -141,7 +141,7 @@ export function OrderList({
         empty={
           <Empty
             title={search ? "ไม่พบคำสั่งซื้อ" : "ยังไม่มีคำสั่งซื้อในช่วงนี้"}
-            action={
+            action={role !== "พนักงานคลัง" &&
               <Button primary onClick={() => go("new-order")}>
                 สร้างคำสั่งซื้อ
               </Button>
@@ -758,6 +758,7 @@ export function OrderDetail({
 }) {
   const { s, change, role } = useStore();
   const [cancelling, setCancelling] = useState(false);
+  const [handoff, setHandoff] = useState("");
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
   const o = s.orders.find((o) => o.id === id);
@@ -769,6 +770,9 @@ export function OrderDetail({
       />
     );
   const c = customer(s, o.cid);
+  const warehouse = role === "พนักงานคลัง";
+  const canProgress = role === "ผู้จัดการ" || (warehouse ? o.status !== "รอยืนยัน" : o.status === "รอยืนยัน" || o.status === "พร้อมส่ง");
+  const picked = o.pickedLots || [];
   const stages = [
     "รับคำสั่งซื้อ",
     "ยืนยันและตัดสต๊อก",
@@ -819,16 +823,17 @@ export function OrderDetail({
         back={() => go("orders")}
         actions={
           <>
+            {!warehouse && !["รอยืนยัน", "ยกเลิก"].includes(o.status) && <Button onClick={() => open("receipt", id)}><Printer size={16} />{o.receipt ? "ดูใบเสร็จ" : "ออกใบเสร็จ"}</Button>}
             {!["รอยืนยัน", "ยกเลิก"].includes(o.status) && (
               <Button onClick={() => open("picking", id)}>
                 <Printer size={16} />
                 ใบจัดสินค้า
               </Button>
             )}
-            {!["กำลังจัดส่ง", "เสร็จสิ้น", "ยกเลิก"].includes(o.status) && (
+            {canProgress && !["กำลังจัดส่ง", "เสร็จสิ้น", "ยกเลิก"].includes(o.status) && (
               <Button
                 primary
-                disabled={o.status === "กำลังจัดสินค้า" && !o.accurate}
+                disabled={o.status === "กำลังจัดสินค้า" && (!o.accurate || o.allocations.some(a => !picked.includes(a.lot)))}
                 onClick={next}
               >
                 {o.status === "รอยืนยัน"
@@ -883,6 +888,10 @@ export function OrderDetail({
           กรุณาตรวจรายการก่อนยืนยัน
         </div>
       )}
+      <div className="notice">
+        <strong>ขั้นตอนถัดไป: </strong>
+        {o.status === "รอยืนยัน" ? "ฝ่ายขายตรวจลูกค้า จำนวน และการรับสินค้า ก่อนยืนยันคำสั่งซื้อ" : o.status === "กำลังจัดสินค้า" ? "คลังหยิบสินค้าตามห้องและล็อตด้านล่าง ทำเครื่องหมายทีละล็อต แล้วตรวจความครบถ้วน" : o.status === "พร้อมส่ง" ? (o.address ? "จัดงานส่งและระบุผู้ส่ง ก่อนส่งมอบสินค้า" : "ตรวจชื่อผู้รับและจำนวนสินค้าก่อนยืนยันรับหน้าร้าน") : o.status === "กำลังจัดส่ง" ? "ติดตามสถานะและบันทึกผลส่งมอบในหน้าการจัดส่ง" : "ตรวจประวัติการทำรายการด้านล่างได้"}
+      </div>
       <Section title="รายการสินค้า">
         <DataTable
           rows={o.items.map((i) => ({ ...i, id: i.pid }))}
@@ -920,7 +929,9 @@ export function OrderDetail({
           <DataTable
             rows={o.allocations.map((a, n) => ({ ...a, id: a.lot + "-" + n }))}
             columns={[
+              ...(o.status === "กำลังจัดสินค้า" ? [{ label: "ตรวจหยิบ", cell: (a: { lot: string; pid: string }) => <input type="checkbox" aria-label={"หยิบล็อต " + s.lots.find(l => l.id === a.lot)?.code} checked={picked.includes(a.lot)} disabled={role !== "ผู้จัดการ" && !warehouse} onChange={e => { const checked = e.target.checked; change("บันทึกการหยิบล็อตแล้ว", state => { const order = state.orders.find(x => x.id === id)!; order.pickedLots = checked ? [...new Set([...(order.pickedLots || []), a.lot])] : (order.pickedLots || []).filter(x => x !== a.lot); order.accurate = false; }); }} /> }] : []),
               { label: "สินค้า", cell: (a) => product(s, a.pid).name },
+              { label: "ห้องเก็บ", cell: (a) => s.rooms.find(r => r.id === s.lots.find(l => l.id === a.lot)?.room)?.name },
               {
                 label: "ล็อต",
                 cell: (a) => s.lots.find((l) => l.id === a.lot)?.code,
@@ -940,7 +951,8 @@ export function OrderDetail({
             <label className="check-row">
               <input
                 type="checkbox"
-                checked={o.accurate}
+                checked={o.accurate && o.allocations.every(a => picked.includes(a.lot))}
+                disabled={(role !== "ผู้จัดการ" && !warehouse) || o.allocations.some(a => !picked.includes(a.lot))}
                 onChange={(e) =>
                   change("บันทึกผลตรวจสินค้าแล้ว", (s) => {
                     s.orders.find((x) => x.id === id)!.accurate =
@@ -948,7 +960,7 @@ export function OrderDetail({
                   })
                 }
               />
-              ตรวจแล้ว: ชนิดสินค้า จำนวน และล็อตถูกต้องครบถ้วน
+              ตรวจแล้ว: ชนิดสินค้า จำนวน และล็อตถูกต้องครบถ้วน (หยิบแล้ว {o.allocations.filter(a => picked.includes(a.lot)).length}/{o.allocations.length} ล็อต)
             </label>
           )}
         </Section>
@@ -958,6 +970,11 @@ export function OrderDetail({
           <p>{o.note}</p>
         </Section>
       )}
+      <Section title="บันทึกส่งต่องาน">
+        <p className="muted">บันทึกข้อควรระวังหรือข้อมูลที่ทีมถัดไปต้องทราบ โดยเก็บผู้บันทึกและเวลาไว้ในประวัติ</p>
+        <Field label="ข้อความส่งต่องาน"><textarea value={handoff} onChange={e => setHandoff(e.target.value)} placeholder="เช่น ลูกค้าจะรับสินค้าเวลา 15:00 น. กรุณาแยกถุงตามรายการ" rows={3} /></Field>
+        <Button disabled={!handoff.trim()} onClick={() => { if (change("บันทึกส่งต่องานแล้ว", state => { state.orders.find(x => x.id === id)!.timeline.push({status: role + ": " + handoff.trim(), time: new Date().toISOString()}); })) setHandoff(""); }}>บันทึกส่งต่อ</Button>
+      </Section>
       <details className="record-log">
         <summary>ประวัติคำสั่งซื้อ</summary>
         {o.timeline.map((t, n) => (
@@ -969,7 +986,7 @@ export function OrderDetail({
           </div>
         ))}
       </details>
-      {!["กำลังจัดส่ง", "เสร็จสิ้น", "ยกเลิก"].includes(o.status) && (
+      {!warehouse && !o.receipt && !["กำลังจัดส่ง", "เสร็จสิ้น", "ยกเลิก"].includes(o.status) && (
         <div className="record-footer">
           <Button danger onClick={() => setCancelling(true)}>
             ยกเลิกคำสั่งซื้อ

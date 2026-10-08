@@ -41,12 +41,15 @@ export function Inventory({
   open: OpenForm;
   filter?: string;
 }) {
-  const { s } = useStore();
+  const { s, role } = useStore();
+  const canManage = role === "ผู้จัดการ" || role === "พนักงานคลัง";
+  const [room, setRoom] = useState("");
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState(initial || "ทั้งหมด");
   const lots = s.lots
     .filter(
       (l) =>
+        (!room || l.room === room) &&
         [
           product(s, l.pid).name,
           product(s, l.pid).sku,
@@ -85,7 +88,7 @@ export function Inventory({
       <PageHeader
         title="สินค้าและสต๊อก"
         description={`${s.products.length} ชนิดสินค้า · ${s.lots.length} ล็อต · ไม่รวมสินค้าหมดอายุในจำนวนพร้อมขาย`}
-        actions={
+        actions={canManage &&
           <>
             <Button onClick={() => open("count")}>
               <ClipboardCheck size={16} />
@@ -108,7 +111,8 @@ export function Inventory({
           <ScanLine size={16} />
           สแกนบาร์โค้ด
         </Button>
-        <Button onClick={() => open("product")}>เพิ่มสินค้า</Button>
+        {role === "ผู้จัดการ" && <Button onClick={() => open("product")}>เพิ่มสินค้า</Button>}
+        <select aria-label="กรองห้องเก็บ" value={room} onChange={e => setRoom(e.target.value)}><option value="">ทุกห้องเก็บ</option>{s.rooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select>
       </div>
       <Filters
         value={filter}
@@ -228,7 +232,7 @@ export function Inventory({
           <div className="list-row" key={p.id}>
             <b>{p.name}</b>
             <span>ยังไม่มีสินค้าในคลัง</span>
-            <Button onClick={() => open("receive", p.id)}>รับสินค้าเข้า</Button>
+            {canManage && <Button onClick={() => open("receive", p.id)}>รับสินค้าเข้า</Button>}
           </div>
         ))}
       <details className="stock-history">
