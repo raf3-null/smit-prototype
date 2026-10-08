@@ -142,6 +142,7 @@ export default function Operations() {
   });
   const [customerAdded, setCustomerAdded] = useState("");
   const [form, setForm] = useState<{ kind: string; id?: string } | null>(null);
+  const [lineReturn, setLineReturn] = useState("dashboard");
   const [resetOpen, setResetOpen] = useState(false);
   const [resetConfirmed, setResetConfirmed] = useState(false);
   const [menu, setMenu] = useState(false);
@@ -315,7 +316,7 @@ export default function Operations() {
         </div>
         <nav aria-label="เมนูหลัก">
           {navigation
-            .map((g) => ({ ...g, items: g.items.filter((x) => canAccess(role, x.route)) }))
+            .map((g) => ({ ...g, items: g.items.filter((x) => x.route !== "line" && canAccess(role, x.route)) }))
             .filter((g) => g.items.length > 0)
             .map((g, n) => (
               <div className="nav-section" key={n}>
@@ -395,6 +396,7 @@ export default function Operations() {
             <strong>{titles[active] || "ภาพรวม"}</strong>
           </div>
           <div className="header-tools">
+            {canAccess(role,"line") && <Button aria-label={active === "line" ? "กลับหน้าระบบ" : "เปิด LINE"} onClick={()=>{if(active === "line")go(lineReturn);else{setLineReturn(active);go("line");}}}><Contact size={16}/><span>{active === "line" ? "กลับหน้าระบบ" : "LINE"}</span></Button>}
             {role === "ผู้จัดการ" && <Button aria-label="รีเซ็ตข้อมูลตัวอย่าง" onClick={() => {setResetConfirmed(false);setResetOpen(true);}}><RotateCcw size={16}/><span className="reset-button-label">รีเซ็ตข้อมูล</span></Button>}
             <Button
               className="global-search-button"

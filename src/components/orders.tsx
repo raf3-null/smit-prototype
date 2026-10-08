@@ -63,12 +63,12 @@ function SendOrderLine({o,go}:{o:Order;go:Navigate}) {
   if(o.cid==='C-WALKIN'||role==='พนักงานคลัง'||['รอยืนยัน','ยกเลิก'].includes(o.status))return null;
   const key=`${o.id}-${o.status}-${o.receipt?.number||'order'}`;
   const sent=s.lineMessages?.some(m=>m.key===key);
-  return <Button small onClick={e=>{e.stopPropagation();if(sent){go('line','',o.id);return;}if(change('ส่งคำสั่งซื้อเข้า LINE จำลองแล้ว',state=>{
+  return <Button small onClick={e=>{e.stopPropagation();if(sent){go('line','',o.id);return;}if(change('ส่งคำสั่งซื้อเข้า LINE แล้ว',state=>{
     const current=state.orders.find(x=>x.id===o.id)!;
     const list=state.lineMessages||(state.lineMessages=[]);
     if(list.some(m=>m.key===key))return;
     list.push({id:uid('LINE'),key,cid:current.cid,source:current.id,route:'orders',direction:'store',sender:role,time:new Date().toISOString(),receipt:current.receipt?.number,text:`แจ้งคำสั่งซื้อ ${current.id}\n${current.items.map(i=>`${product(state,i.pid).name} ${i.qty} ${product(state,i.pid).unit}`).join('\n')}\nยอดสุทธิ ฿${money(sum(current))}\nสถานะ: ${current.status}\n${current.address?'จัดส่ง: '+current.address:'รับสินค้าที่ร้าน'}${current.receipt?'\nรับชำระแล้ว · ใบเสร็จ '+current.receipt.number:''}`});
-  }))go('line','',o.id);}}>{sent?'ดูแชต LINE':'ส่งเข้า LINE จำลอง'}</Button>;
+  }))go('line','',o.id);}}>{sent?'ดูแชต LINE':'ส่งเข้า LINE'}</Button>;
 }
 export function OrderList({
   go,
