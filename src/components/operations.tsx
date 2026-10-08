@@ -65,7 +65,7 @@ import {
 import { Forms } from "./forms";
 import Driver from "./driver";
 import LineWorkspace from "./line-workspace";
-import Training from "./training";
+import Staff from "./staff";
 import OnlineIntake from "./online-intake";
 const navigation = [
   {
@@ -104,7 +104,7 @@ const navigation = [
     section: "ระบบ",
     items: [
       { route: "alerts", title: "การแจ้งเตือน", icon: Bell },
-      { route: "team", title: "พนักงานและการอบรม", icon: UserRound },
+      { route: "team", title: "พนักงาน", icon: UserRound },
       { route: "settings", title: "ตั้งค่า", icon: SettingsIcon },
     ],
   },
@@ -276,7 +276,7 @@ export default function Operations() {
         content = <LineWorkspace go={go} entity={entity} filter={filter} />;
         break;
       case "team":
-        content = <Training open={open} />;
+        content = <Staff open={open} />;
         break;
       case "settings":
         content = <Settings open={open} go={go} />;

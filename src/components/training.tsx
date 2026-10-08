@@ -5,18 +5,18 @@ import {PageHeader,Button,Section,DataTable,Badge,Field,Filters,SearchInput,Moda
 import {TODAY,uid,date} from '@/lib/domain';
 import {Course,Enrollment,trainingData,trainingRole,trainingStatuses,saveResult} from '@/lib/training';
 import {OpenForm} from './orders';
-export default function Training({open}:{open:OpenForm}) {
+export default function Training({open,userId}:{open:OpenForm;userId?:string}) {
  const {s,role,change}=useStore(); const manager=role==='ผู้จัดการ'; const data=trainingData(s);
  const [tab,setTab]=useState('การอบรม');const [search,setSearch]=useState('');const [status,setStatus]=useState('ทั้งหมด');const [employee,setEmployee]=useState('');
  const [course,setCourse]=useState<Course|null>(null);const [editor,setEditor]=useState<Course|Partial<Course>|null>(null);const [assign,setAssign]=useState<Course|null>(null);const [record,setRecord]=useState<Enrollment|null>(null);const [error,setError]=useState('');
  const eligible=s.users.filter(u=>u.active&&(manager||trainingRole(u.role)===trainingRole(role)));
  const person=eligible.find(u=>u.id===employee)||eligible[0];
- const mine=manager?data.enrollments:data.enrollments.filter(e=>e.user===person?.id);
+ const mine=userId?data.enrollments.filter(e=>e.user===userId):manager?data.enrollments:data.enrollments.filter(e=>e.user===person?.id);
  const rows=mine.filter(e=>(status==='ทั้งหมด'||e.status===status)&&[data.courses.find(c=>c.id===e.course)?.name,s.users.find(u=>u.id===e.user)?.name].join(' ').includes(search));
  const writable=(state:typeof s)=>state.trainingData||(state.trainingData=trainingData(state));
  const selected=record?data.enrollments.find(e=>e.id===record.id):undefined;
- return <><PageHeader title={manager?'พนักงานและการอบรม':'การอบรมของฉัน'} description={manager?'จัดหลักสูตร มอบหมาย ติดตามและบันทึกผลการอบรม':'ดูหลักสูตรที่ได้รับมอบหมาย เตรียมตัวอบรม และติดตามผลของคุณ'} actions={manager&&<Button primary onClick={()=>setEditor({})}>สร้างหลักสูตร</Button>}/>
- {manager?<Filters value={tab} onChange={setTab} items={['การอบรม','หลักสูตร','พนักงาน'].map(x=>({label:x,value:x}))}/>:<Field label="ดูตัวอย่างพนักงานในบทบาทนี้"><select value={person?.id||''} onChange={e=>setEmployee(e.target.value)}>{eligible.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></Field>}
+ return <><PageHeader title={manager?'การอบรม':'การอบรมของฉัน'} description={manager?'จัดหลักสูตร มอบหมาย ติดตามและบันทึกผลการอบรม':'ดูหลักสูตรที่ได้รับมอบหมาย เตรียมตัวอบรม และติดตามผลของคุณ'} actions={manager&&!userId&&<Button primary onClick={()=>setEditor({})}>สร้างหลักสูตร</Button>}/>
+ {manager&&!userId?<Filters value={tab} onChange={setTab} items={['การอบรม','หลักสูตร'].map(x=>({label:x,value:x}))}/>:!userId&&<Field label="ดูตัวอย่างพนักงานในบทบาทนี้"><select value={person?.id||''} onChange={e=>setEmployee(e.target.value)}>{eligible.map(u=><option key={u.id} value={u.id}>{u.name}</option>)}</select></Field>}
  {!manager&&!person&&<Empty title="ยังไม่มีพนักงานในบทบาทนี้" description="ผู้จัดการเพิ่มพนักงานและมอบหมายหลักสูตรได้"/>}
  {(tab==='การอบรม'||!manager)&&<><div className="toolbar"><SearchInput value={search} onChange={setSearch} placeholder="ค้นหาหลักสูตรหรือพนักงาน"/></div><Filters value={status} onChange={setStatus} items={['ทั้งหมด',...trainingStatuses].map(x=>({label:x,value:x,count:mine.filter(e=>x==='ทั้งหมด'||e.status===x).length}))}/><DataTable rows={rows} empty={<Empty title="ไม่มีรายการอบรมในกลุ่มนี้"/>} columns={[{label:'หลักสูตร / พนักงาน',cell:e=><><button className="customer-name" onClick={()=>{setRecord(e);setError('')}}>{data.courses.find(c=>c.id===e.course)?.name}</button><small>{s.users.find(u=>u.id===e.user)?.name}</small></>},{label:'กำหนดเสร็จ',cell:e=>date(e.due)},{label:'สถานะ',cell:e=><Badge>{e.status}</Badge>},{label:'คะแนน',cell:e=>e.score===null?'ยังไม่ประเมิน':e.score+'/100'},{label:'ทบทวนครั้งถัดไป',cell:e=>e.review?date(e.review):'—'},{label:'',cell:e=><Button small onClick={()=>{setRecord(e);setError('')}}>ดูรายละเอียด</Button>}]}/></>}
  {manager&&tab==='หลักสูตร'&&<DataTable rows={data.courses} columns={[{label:'หลักสูตร',cell:c=><button className="customer-name" onClick={()=>setCourse(c)}>{c.name}</button>},{label:'สำหรับ',cell:c=>c.role},{label:'วันอบรม / ผู้สอน',cell:c=><>{date(c.date)}<small>{c.instructor}</small></>},{label:'ผู้เข้าอบรม',cell:c=>data.enrollments.filter(e=>e.course===c.id).length+' คน'},{label:'',cell:c=><div className="actions"><Button small onClick={()=>setEditor(c)}>แก้ไข</Button><Button small onClick={()=>{setAssign(c);setError('')}}>มอบหมาย</Button></div>}]}/>}

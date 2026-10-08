@@ -1,0 +1,24 @@
+'use client';
+import {useState} from 'react';
+import {useStore} from './store';
+import {Button,PageHeader,Field,SearchInput,DataTable,Badge,Modal,Empty} from './ui';
+import {OpenForm} from './orders';
+import Training from './training';
+import {trainingRole} from '@/lib/training';
+export default function Staff({open}:{open:OpenForm}){
+ const {s,role}=useStore();const manager=role==='ผู้จัดการ';
+ const [search,setSearch]=useState('');const [position,setPosition]=useState('ทั้งหมด');const [status,setStatus]=useState('ทั้งหมด');const [selected,setSelected]=useState('');const [detail,setDetail]=useState('ข้อมูลพนักงาน');const [training,setTraining]=useState(false);
+ const available=s.users.filter(u=>manager||trainingRole(u.role)===trainingRole(role));
+ const rows=available.filter(u=>[u.name,u.phone||''].join(' ').includes(search)&&(position==='ทั้งหมด'||u.role===position)&&(status==='ทั้งหมด'||(u.employmentStatus||(u.active?'ใช้งาน':'พักงาน'))===status));
+ const person=s.users.find(u=>u.id===selected);
+ const tasks=(name:string)=>s.deliveries.filter(d=>d.driver===name&&d.status!=='จัดส่งสำเร็จ');
+ return <><PageHeader title={manager?'พนักงาน':'ข้อมูลพนักงานของฉัน'} description={manager?'จัดการคนในทีม ตำแหน่ง ข้อมูลติดต่อ และงานที่รับผิดชอบ':'ดูข้อมูลพนักงานและงานที่รับผิดชอบในบทบาทของคุณ'} actions={manager&&<Button primary onClick={()=>open('user')}>เพิ่มพนักงาน</Button>}/>
+ <div className="actions" style={{marginBottom:24}}><Button onClick={()=>setTraining(false)} primary={!training}>รายชื่อพนักงาน</Button><Button onClick={()=>setTraining(true)}>การอบรม</Button></div>
+ {training?<Training open={open}/>:<><div className="toolbar"><SearchInput value={search} onChange={setSearch} placeholder="ค้นหาชื่อ / เบอร์โทร"/><Field label="ตำแหน่ง"><select value={position} onChange={e=>setPosition(e.target.value)}>{['ทั้งหมด',...Array.from(new Set(available.map(u=>u.role)))].map(t=><option key={t}>{t}</option>)}</select></Field><Field label="สถานะ"><select value={status} onChange={e=>setStatus(e.target.value)}>{['ทั้งหมด','ใช้งาน','พักงาน','ลาออก'].map(t=><option key={t}>{t}</option>)}</select></Field></div>
+ <DataTable rows={rows} empty={<Empty title="ไม่พบพนักงาน"/>} onRow={u=>{setSelected(u.id);setDetail('ข้อมูลพนักงาน')}} columns={[{label:'พนักงาน',cell:u=><button className="customer-name" onClick={()=>{setSelected(u.id);setDetail('ข้อมูลพนักงาน')}}>{u.name}</button>},{label:'ตำแหน่ง',cell:u=>u.role},{label:'สถานะ',cell:u=><Badge>{u.employmentStatus||(u.active?'ใช้งาน':'พักงาน')}</Badge>},{label:'เบอร์ติดต่อ',cell:u=>u.phone?<a href={'tel:'+u.phone}>{u.phone}</a>:'ยังไม่ระบุ'},{label:'งานที่รับผิดชอบ',cell:u=>tasks(u.name).length?`งานส่งรอส่งมอบ ${tasks(u.name).length} งาน`:u.role==='ฝ่ายขาย'?'รับคำสั่งซื้อและดูแลลูกค้า':u.role==='คลังสินค้า'?'จัดสินค้าและดูแลสต๊อก':u.role==='ผู้ดูแลห้องเย็น'?'ตรวจอุณหภูมิและดูแลห้องเย็น':u.role==='พนักงานส่งของ'?'ไม่มีงานส่งค้าง':'ดูแลและประสานงานทีม'},{label:'',cell:u=><Button small onClick={e=>{e.stopPropagation();setSelected(u.id);setDetail('ข้อมูลพนักงาน')}}>ดูรายละเอียด</Button>}]}/></>}
+ {person&&<Modal title={person.name} onClose={()=>setSelected('')} wide><p>{person.role} · <Badge>{person.employmentStatus||(person.active?'ใช้งาน':'พักงาน')}</Badge></p><div className="actions">{['ข้อมูลพนักงาน','งานและประวัติ','การอบรม'].map(t=><Button key={t} primary={detail===t} onClick={()=>setDetail(t)}>{t}</Button>)}</div>
+ {detail==='ข้อมูลพนักงาน'&&<><h3>ข้อมูลติดต่อ</h3><p>{person.phone?<a href={'tel:'+person.phone}>{person.phone}</a>:'ยังไม่ได้ระบุเบอร์โทร'}</p><h3>หน้าที่และสิทธิ์เข้าถึง</h3><p>{person.role==='พนักงานส่งของ'?'ดูงานส่งที่ได้รับมอบหมายและบันทึกผลส่งมอบ':person.role==='ฝ่ายขาย'?'รับคำสั่งซื้อ ดูแลข้อมูลลูกค้า และออกใบเสร็จ':person.role==='คลังสินค้า'?'ดูคำสั่งซื้อ จัดสินค้า และตรวจสต๊อก':person.role==='ผู้ดูแลห้องเย็น'?'ตรวจห้องเย็น อุณหภูมิ และบันทึกเหตุผิดปกติ':'จัดการและติดตามงานภายในระบบ'}</p><p>{person.notes||'ยังไม่มีหมายเหตุเพิ่มเติม'}</p>{manager&&<Button onClick={()=>open('user',person.id)}>แก้ไขข้อมูลพนักงาน</Button>}</>}
+ {detail==='งานและประวัติ'&&<><h3>งานที่ยังไม่ส่งมอบ</h3>{tasks(person.name).length?tasks(person.name).map(d=><div className="list-row" key={d.id}><div><b>{d.oid}</b><p>{d.address}</p></div><Badge>{d.status}</Badge></div>):<p className="muted">ไม่มีงานส่งที่ยังไม่ส่งมอบ</p>}<h3>ประวัติงาน</h3>{s.deliveries.filter(d=>d.driver===person.name&&d.status==='จัดส่งสำเร็จ').map(d=><p key={d.id}>{d.oid} · ส่งสำเร็จ · {d.log.at(-1)}</p>)}{s.orders.filter(o=>o.employee===person.name).slice(0,10).map(o=><div className="list-row" key={o.id}><b>{o.id}</b><Badge>{o.status}</Badge></div>)}{!s.orders.some(o=>o.employee===person.name)&&!s.deliveries.some(d=>d.driver===person.name)&&<p className="muted">ยังไม่มีประวัติงานที่ระบุชื่อพนักงานรายนี้</p>}</>}
+ {detail==='การอบรม'&&<Training open={open} userId={person.id}/>}</Modal>}
+ </>;
+}

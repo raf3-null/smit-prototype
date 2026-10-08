@@ -1356,12 +1356,17 @@ export function Forms({
         onCancel={close}
         onSubmit={(f) =>
           commit("บันทึกพนักงานแล้ว", (s) => {
-            const v = { name: f.name, role: f.role, active: !!f.active };
-            if (u)
-              Object.assign(
-                s.users.find((x) => x.id === id)!,
-                v,
-              );
+            const v = { name: f.name.trim(), role: f.role, active: f.employmentStatus === "ใช้งาน", employmentStatus: f.employmentStatus, phone: f.phone.trim(), notes: f.notes.trim() };
+            if (!v.name) throw Error("กรอกชื่อพนักงาน");
+            if (s.users.some(x => x.id !== id && x.name === v.name)) throw Error("ชื่อพนักงานนี้มีอยู่แล้ว");
+            if (u) {
+              const previous = s.users.find(x => x.id === id)!;
+              if (previous.name !== v.name) {
+                s.deliveries.filter(d => d.driver === previous.name).forEach(d => { d.driver = v.name; });
+                s.orders.filter(o => o.employee === previous.name).forEach(o => { o.employee = v.name; });
+              }
+              Object.assign(previous, v);
+            }
             else s.users.push({ ...v, id: uid("U"), last: "", training: [] });
           })
         }
@@ -1376,16 +1381,12 @@ export function Forms({
             <option>คลังสินค้า</option>
             <option>ผู้ดูแลห้องเย็น</option>
             <option>ผู้ดูแลระบบ</option>
+            <option>พนักงานส่งของ</option>
           </select>
         </Field>
-        <label className="check-row">
-          <input
-            name="active"
-            type="checkbox"
-            defaultChecked={u?.active ?? true}
-          />
-          พร้อมใช้งานระบบ
-        </label>
+        <Field label="เบอร์ติดต่อ"><input name="phone" type="tel" defaultValue={u?.phone||""}/></Field>
+        <Field label="สถานะพนักงาน"><select name="employmentStatus" defaultValue={u?.employmentStatus||(u?.active===false?"พักงาน":"ใช้งาน")}><option>ใช้งาน</option><option>พักงาน</option><option>ลาออก</option></select></Field>
+        <Field label="หมายเหตุ"><textarea name="notes" defaultValue={u?.notes||""}/></Field>
       </SimpleForm>
     );
   }

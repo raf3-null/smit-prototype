@@ -188,6 +188,9 @@ export type State = {
     active: boolean;
     last: string;
     training: string[];
+    phone?: string;
+    notes?: string;
+    employmentStatus?: string;
   }[];
   logs: { id: string; date: string; text: string; user: string }[];
   settings: {
