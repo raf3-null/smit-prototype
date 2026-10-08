@@ -3,7 +3,7 @@ import base from "./base-data.json";
 export const TODAY = "2026-10-02";
 export const STORAGE_KEY = "sasawat-operations-v2";
 export type Role =
-  "พนักงานขาย" | "พนักงานคลัง" | "ผู้ดูแลห้องเย็น" | "ผู้จัดการ";
+  "พนักงานส่งของ" | "พนักงานขาย" | "พนักงานคลัง" | "ผู้ดูแลห้องเย็น" | "ผู้จัดการ";
 export type OrderStatus =
   | "รอยืนยัน"
   | "กำลังจัดสินค้า"
@@ -640,6 +640,24 @@ export function alerts(s: State): Alert[] {
       })),
   ];
 }
+export function addWalkInExamples(s: State): void {
+  const cid = "C-WALKIN";
+  if (!s.customers.some(c => c.id === cid)) s.customers.push({id:cid,name:"ลูกค้าทั่วไป",phone:"",type:"ค้าปลีก",area:"มุกดาหาร",channel:"หน้าร้าน",joined:TODAY,points:0,referrer:"",special:0,line:""});
+  const pids = ["P001","P002","P003","P007","P008","P010","P012","P017","P019","P020"];
+  let added = 0;
+  pids.forEach((pid,n) => {
+    const id = "ORD-W" + String(n+1).padStart(3,"0");
+    if (s.orders.some(o=>o.id===id)) return;
+    const p = product(s,pid), qty = n%3+1;
+    const day = n<5 ? TODAY : "2026-10-01";
+    const time = "08:"+String(n*5).padStart(2,"0");
+    const stamp = day+"T"+time+":00+07:00";
+    const lot = s.lots.find(l=>l.pid===pid&&l.expiry>=day);
+    s.orders.push({id,cid,channel:"หน้าร้าน",date:day,time,employee:"คุณนิด",items:[{pid,qty,price:p.price}],discount:0,status:"เสร็จสิ้น",accurate:true,address:"",note:"ซื้อหน้าร้านและรับสินค้าที่ร้าน",allocations:lot?[{pid,lot:lot.id,qty}]:[],pickedLots:lot?[lot.id]:[],earned:0,reserved:true,receipt:{number:"RC-W"+String(n+1).padStart(3,"0"),issued:stamp,method:n%2?"โอนเงิน":"เงินสด",reference:"",cashier:"คุณนิด",amount:p.price*qty},timeline:[{status:"รับคำสั่งซื้อหน้าร้าน",time:stamp},{status:"ยืนยันและจัดสินค้าครบ",time:stamp},{status:"รับชำระและออกใบเสร็จ",time:stamp},{status:"ลูกค้ารับสินค้าแล้ว",time:stamp}]});
+    added++;
+  });
+  if(added){s.orders.sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));s.kpi.totalCaptured+=added;}
+}
 export function createSeed(): State {
   const s = structuredClone(base) as unknown as State;
   s.movements = [];
@@ -869,6 +887,7 @@ export function createSeed(): State {
       end: "2026-10-31",
     },
   );
+  addWalkInExamples(s);
   return s;
 }
 export function validateState(v: unknown): v is State {

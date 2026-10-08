@@ -63,6 +63,7 @@ import {
   Settings,
 } from "./management";
 import { Forms } from "./forms";
+import Driver from "./driver";
 import LineWorkspace from "./line-workspace";
 import Training from "./training";
 import OnlineIntake from "./online-intake";
@@ -109,6 +110,7 @@ const navigation = [
   },
 ];
 const roleRoutes: Record<string, string[]> = {
+  พนักงานส่งของ: ["dashboard", "delivery"],
   พนักงานขาย: ["dashboard", "orders", "inventory", "delivery", "crm", "groups", "marketing", "line", "service", "alerts", "team", "new-order"],
   พนักงานคลัง: ["dashboard", "orders", "inventory", "delivery", "alerts", "team"],
   ผู้ดูแลห้องเย็น: ["dashboard", "coldroom", "inventory", "alerts", "team"],
@@ -207,7 +209,7 @@ export default function Operations() {
   else
     switch (p) {
       case "dashboard":
-        content = <Home go={go} open={open} />;
+        content = role === "พนักงานส่งของ" ? <Driver/> : <Home go={go} open={open} />;
         break;
       case "orders":
         content = entity ? (
@@ -236,7 +238,7 @@ export default function Operations() {
         content = <ColdRoom open={open} />;
         break;
       case "delivery":
-        content = <Delivery open={open} />;
+        content = role === "พนักงานส่งของ" ? <Driver/> : <Delivery open={open} />;
         break;
       case "crm":
         content = entity ? (
@@ -354,6 +356,7 @@ export default function Operations() {
               [
                 "พนักงานขาย",
                 "พนักงานคลัง",
+                "พนักงานส่งของ",
                 "ผู้ดูแลห้องเย็น",
                 "ผู้จัดการ",
               ] as Role[]
@@ -434,7 +437,7 @@ export default function Operations() {
             label: role === "ผู้ดูแลห้องเย็น" ? "ห้องเย็น" : "คำสั่งซื้อ",
             icon: role === "ผู้ดูแลห้องเย็น" ? Thermometer : ClipboardList,
           },
-          { r: "inventory", label: "สินค้า", icon: Package },
+          { r: role === "พนักงานส่งของ" ? "delivery" : "inventory", label: role === "พนักงานส่งของ" ? "งานส่งของ" : "สินค้า", icon: role === "พนักงานส่งของ" ? Truck : Package },
           { r: "crm", label: "ลูกค้า", icon: Users },
         ].filter((x) => canAccess(role, x.r)).map((x) => (
           <button

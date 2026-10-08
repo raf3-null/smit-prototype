@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   createSeed,
+  addWalkInExamples,
   stock,
   allocate,
   createOrder,
@@ -35,7 +36,7 @@ const request = {
 test("connected realistic sample data", () => {
   const s = createSeed();
   assert.equal(s.products.length, 20);
-  assert.equal(s.customers.length, 20);
+  assert.equal(s.customers.length, 21);
   assert(s.orders.length >= 30);
   assert.equal(s.rooms.length, 3);
   assert.equal(s.incidents.length, 5);
@@ -240,4 +241,16 @@ test('training seeds relevant assignments and requires reason for result correct
  saveResult(s,e.id,{attendance:'เข้าอบรม',score:85,note:'ผ่าน',reason:''},'ผู้จัดการ');assert.equal(e.status,'ผ่าน');assert.ok(e.review);
  assert.throws(()=>saveResult(s,e.id,{attendance:'เข้าอบรม',score:60,note:'',reason:''},'ผู้จัดการ'));
  saveResult(s,e.id,{attendance:'เข้าอบรม',score:60,note:'ทบทวน',reason:'แก้คะแนนตามแบบประเมิน'},'ผู้จัดการ');assert.equal(e.status,'ต้องทบทวน');assert.equal(e.history.length,2);assert.equal(e.review,'');
+});
+
+test("walk-in baseline has ten completed receipts and migrates without duplicates", () => {
+  const s=createSeed();
+  const orders=s.orders.filter(o=>o.cid==='C-WALKIN');
+  assert.equal(orders.length,10);
+  assert(orders.every(o=>o.channel==='หน้าร้าน' && !o.address && o.status==='เสร็จสิ้น' && o.receipt?.amount===sum(o)));
+  assert.equal(customer(s,'C-WALKIN').phone,'');
+  const count=s.orders.length;
+  addWalkInExamples(s); addWalkInExamples(s);
+  assert.equal(s.orders.length,count);
+  assert(validateState(s));
 });

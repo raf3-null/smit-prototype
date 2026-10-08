@@ -12,6 +12,7 @@ import {
   Role,
   STORAGE_KEY,
   createSeed,
+  addWalkInExamples,
   uid,
   validateState,
 } from "@/lib/domain";
@@ -38,7 +39,7 @@ export function Provider({ children }: { children: ReactNode }) {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (validateState(parsed)) setState(parsed);
+        if (validateState(parsed)) { addWalkInExamples(parsed); setState(parsed); }
         else setToast("ข้อมูลที่บันทึกไว้ไม่สมบูรณ์ ใช้ข้อมูลตัวอย่างแทน");
       }
     } catch {

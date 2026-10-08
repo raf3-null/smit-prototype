@@ -60,7 +60,7 @@ export type Navigate = (
 export type OpenForm = (kind: string, id?: string) => void;
 function SendOrderLine({o,go}:{o:Order;go:Navigate}) {
   const {s,change,role}=useStore();
-  if(role==='พนักงานคลัง'||['รอยืนยัน','ยกเลิก'].includes(o.status))return null;
+  if(o.cid==='C-WALKIN'||role==='พนักงานคลัง'||['รอยืนยัน','ยกเลิก'].includes(o.status))return null;
   const key=`${o.id}-${o.status}-${o.receipt?.number||'order'}`;
   const sent=s.lineMessages?.some(m=>m.key===key);
   return <Button small onClick={e=>{e.stopPropagation();if(sent){go('line','',o.id);return;}if(change('ส่งคำสั่งซื้อเข้า LINE จำลองแล้ว',state=>{

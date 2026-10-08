@@ -130,6 +130,7 @@ export function Home({ go, open }: { go: Navigate; open: OpenForm }) {
     },
   ];
   const priorities: Record<Role, string[]> = {
+    พนักงานส่งของ: [],
     พนักงานขาย: ["confirm", "packing", "low"],
     พนักงานคลัง: ["packing", "low", "expiry"],
     ผู้ดูแลห้องเย็น: ["cold", "expiry"],
